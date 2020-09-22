@@ -35,8 +35,8 @@ export default {
     },
     submit () {
       let parametros = {
-        USER_LOGIN: this.USER_LOGIN,
-        USER_PASSW: this.USER_PASSW
+        username: this.USER_LOGIN,
+        password: this.USER_PASSW
       }
       this.$http.post('/login', parametros).then(function () {
         this.USER_LOGIN = ''
