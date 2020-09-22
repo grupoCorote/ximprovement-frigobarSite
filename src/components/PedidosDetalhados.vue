@@ -148,7 +148,7 @@ export default {
       if (pedido.itens == null) pedido.itens = []
       this.usuarioSelecionado = null
       this.pedidoSelecionado = pedido
-      this.$http.get('/oritem/dopedido/' + pedido.cod_order).then(function (response) {
+      this.$http.get('/items/byOrder/' + pedido.cod_order).then(function (response) {
         pedido.itens = response.data.rows
         this.$forceUpdate()
         return undefined
@@ -208,7 +208,7 @@ export default {
       this.pedidoSelecionado = null
       this.usuarioSelecionado = usuario
 
-      this.$http.post('/oritem/dousuario', {cod_uid: usuario.cod_uid, dat_ini, dat_fin}).then(function (response) {
+      this.$http.post('/items/ByUser/' + usuario.cod_uid, {dat_ini, dat_fin}).then(function (response) {
         usuario.total_cobrar = 0
         usuario.total_abonar = 0
         for (let item of response.data.rows) {

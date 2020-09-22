@@ -53,7 +53,7 @@ export default {
     this.$http.get('/usuarios/perfil').then(function (response) {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
-      return this.$http.get('/prod/todos').then(function (response) {
+      return this.$http.get('/products/').then(function (response) {
         this.lista_produtos = response.data.rows
         return undefined
       })

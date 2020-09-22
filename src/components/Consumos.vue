@@ -80,7 +80,7 @@ export default {
       let dat_fin = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
 
-      this.$http.post('/prod/consumidos', {dat_ini, dat_fin}).then(function (response) {
+      this.$http.post('/products/consumed/?itemsProduct__order__date__range=' + dat_ini + '2C' + dat_fin, {dat_ini, dat_fin}).then(function (response) {
         this.total_cobrar = 0
         this.total_abonar = 0
         this.qtd_total_consumida = 0
