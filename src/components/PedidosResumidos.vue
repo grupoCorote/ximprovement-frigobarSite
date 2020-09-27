@@ -105,7 +105,7 @@ export default {
   },
   mounted () {
     this.usuarioSelecionado = null
-    this.$http.get('/usuarios/perfil').then(function (response) {
+    this.$http.get('/register').then(function (response) {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
 

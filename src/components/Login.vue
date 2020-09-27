@@ -26,7 +26,7 @@ export default {
     }
   },
   mounted () {
-    this.$http.get('/usuarios/perfil').then(() => window.location.replace(window.location.pathname + '#/carrinho')).catch(() => {})
+    this.$http.get('/register').then(() => window.location.replace(window.location.pathname + '#/carrinho')).catch(() => {})
   },
   methods: {
     tratarErro (response) {

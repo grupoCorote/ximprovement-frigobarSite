@@ -15,12 +15,12 @@ ws.interceptor = function (request, next) {
   if (request.method === 'POST' || request.method === 'PUT') request.headers.set('Content-Type', 'application/json')
 
   // Intercepta a rota de solicitação de perfil se já tem informações do perfil e retorna direto sem precisar pedir do servidor
-  if (request.url === '/usuarios/perfil' && request.method === 'GET' && ws.perfil) {
+  if (request.url === '/register' && request.method === 'GET' && ws.perfil) {
     return next(request.respondWith({ perfil: ws.perfil }, { status: 200, statusText: 'OK' }))
   }
 
   // Verifica se a rota está solicitando as informações do usuário logado
-  let aguardandoPerfil = (request.url === '/usuarios/perfil' && request.method === 'GET')
+  let aguardandoPerfil = (request.url === '/register' && request.method === 'GET')
 
   // Adiciona o endereço do web-service
   request.url = ws.servidorWS + request.url
