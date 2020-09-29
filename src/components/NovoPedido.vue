@@ -16,8 +16,8 @@
                 </thead>
                 <tbody>
                   <tr v-for="produto in filteredItems">
-                    <td>{{produto.des_prod}}</td>
-                    <td class="tad">R$ {{produto.val_price.toFixed(2).replace('.', ',')}}</td>
+                    <td>{{produto.description}}</td>
+                    <td class="tad">R$ {{produto.price}}</td>
                     <td><a v-on:click="adicionarNoCarrinho(produto)"><q-icon name="add_shopping_cart" /></a></td>
                   </tr>
                 </tbody>
@@ -40,15 +40,15 @@
               </thead>
               <tbody>
                 <tr v-for="item in lista_carrinho">
-                  <td class="tac">{{item.des_prod}}</td>
-                  <td class="tac">{{item.num_qtd}} <a v-on:click="item_inc(item)"><q-icon name="add_circle_outline" /></a> <a v-on:click="item_dec(item)"><q-icon name="remove_circle_outline" /></a> <a v-on:click="item_rem(item)"><q-icon name="delete_forever" /></a></td>
-                  <td class="tad">R$ {{(item.num_qtd * item.val_price).toFixed(2).replace('.', ',')}}</td>
+                  <td class="tac">{{item.description}}</td>
+                  <td class="tac">{{item.quantity}} <a v-on:click="item_inc(item)"><q-icon name="add_circle_outline" /></a> <a v-on:click="item_dec(item)"><q-icon name="remove_circle_outline" /></a> <a v-on:click="item_rem(item)"><q-icon name="delete_forever" /></a></td>
+                  <td class="tad">R$ {{(item.quantity * item.price).toFixed(2).replace('.', ',')}}</td>
                 </tr>
               </tbody>
             </table>
             <br>
             <div v-if="lista_carrinho.length === 0"> &nbsp; (o carrinho está vazio)</div>
-            <div v-else> &nbsp; Total: R$ {{valor_total_carrinho.toFixed(2).replace('.', ',')}}</div>
+            <div v-else> &nbsp; Total: R$ {{(valor_total_carrinho).toFixed(2).replace('.', ',')}}</div>
             <br>
             <div v-if="lista_carrinho.length > 0">
               <q-btn color="primary" type="button" name="button" v-on:click="confirmarPedido()">Finalizar pedido</q-btn>
@@ -94,7 +94,7 @@ export default {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
       return this.$http.get('/products/actives/').then(function (response) {
-        this.lista_produtos = response.data.rows
+        this.lista_produtos = response.data
         this.setFilter()
         return undefined
       })
@@ -116,7 +116,7 @@ export default {
         this.filteredItems = this.lista_produtos
       }
       else {
-        this.filteredItems = this.lista_produtos.filter((item) => item.des_prod.toLowerCase().includes(this.textSearch.toLowerCase()))
+        this.filteredItems = this.lista_produtos.filter((item) => item.description.toLowerCase().includes(this.textSearch.toLowerCase()))
       }
     },
 
@@ -130,7 +130,7 @@ export default {
 
     recalcularValor () {
       let novoTotal = 0
-      for (let item of this.lista_carrinho) novoTotal += item.num_qtd * item.val_price
+      for (let item of this.lista_carrinho) novoTotal += item.quantity * item.price
       if (Math.abs(this.valor_total_carrinho - novoTotal) > 0.005) {
         this.valor_total_carrinho = novoTotal
         alert('O valor total do pedido estava errado e foi atualizado')
@@ -147,7 +147,7 @@ export default {
         return
       }
       for (let item of this.lista_carrinho) {
-        if (item.num_qtd) lista_itens.push({cod_prod: item.cod_prod, num_qtd: item.num_qtd, val_price: item.val_price})
+        if (item.quantity) lista_itens.push({product: item.product, quantity: item.quantity, price: item.price})
       }
       if (lista_itens.length === 0) {
         alert('Nenhum item no pedido')
@@ -167,8 +167,9 @@ export default {
               label: 'Confirmar',
               handler: () => {
                 let params = {
-                  cod_use: this.ckbterceiros ? 2 : 1,
-                  des_justify: this.ckbterceiros ? this.justificativa : '',
+                  orderType: this.ckbterceiros ? 2 : 1,
+                  justification: this.ckbterceiros ? this.justificativa : '',
+                  user: 10,
                   lista_itens
                 }
                 this.$http.post('/order', params).then(function (response) {
@@ -186,22 +187,22 @@ export default {
     },
 
     item_dec (item) {
-      if (item.num_qtd === 1) this.item_rem(item)
-      else if (item.num_qtd > 1) {
-        item.num_qtd--
-        this.valor_total_carrinho -= item.val_price
+      if (item.quantity === 1) this.item_rem(item)
+      else if (item.quantity > 1) {
+        item.quantity--
+        this.valor_total_carrinho -= parseFloat(item.price)
         // recalcularValor()
       }
     },
     item_inc (item) {
-      item.num_qtd++
-      this.valor_total_carrinho += item.val_price
+      item.quantity++
+      this.valor_total_carrinho += parseFloat(item.price)
       // recalcularValor()
     },
     item_rem (item) {
       for (let i = 0; i < this.lista_carrinho.length; i++) {
-        if (item.cod_prod === this.lista_carrinho[i].cod_prod) {
-          this.valor_total_carrinho -= item.num_qtd * item.val_price
+        if (item.produto === this.lista_carrinho[i].produto) {
+          this.valor_total_carrinho -= item.quantity * item.price
           this.lista_carrinho.splice(i, 1)
           // recalcularValor()
           return
@@ -210,23 +211,23 @@ export default {
     },
     adicionarNoCarrinho (produto) {
       for (let item of this.lista_carrinho) {
-        if (item.cod_prod === produto.cod_prod) {
-          item.num_qtd += 1
-          this.valor_total_carrinho += produto.val_price
+        if (item.product === produto.id) {
+          item.quantity += 1
+          this.valor_total_carrinho += parseFloat(produto.price)
           // recalcularValor()
-          Toast.create.positive({html: 'Adicionado: ' + produto.des_prod, timeout: 700})
+          Toast.create.positive({html: 'Adicionado: ' + produto.description, timeout: 700})
           return
         }
       }
       this.lista_carrinho.push({
-        cod_prod: produto.cod_prod,
-        des_prod: produto.des_prod,
-        num_qtd: 1,
-        val_price: produto.val_price
+        product: produto.id,
+        description: produto.description,
+        quantity: 1,
+        price: produto.price
       })
-      this.valor_total_carrinho += produto.val_price
+      this.valor_total_carrinho += produto.price * 1
       // recalcularValor()
-      Toast.create.positive({html: 'Adicionado: ' + produto.des_prod, timeout: 700})
+      Toast.create.positive({html: 'Adicionado: ' + produto.description, timeout: 700})
     }
   }
 }

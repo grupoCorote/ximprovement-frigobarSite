@@ -12,15 +12,15 @@
         </thead>
         <tbody>
           <tr v-for="produto in lista_produtos">
-            <td><q-icon v-on:click="trocarAtivo(produto)" name="edit" /> {{produto.idf_active}}</td>
-            <td><q-icon v-on:click="trocarDescricao(produto)" name="edit" /> {{produto.des_prod}}</td>
-            <td class="tad">R$ {{produto.val_price.toFixed(2).replace('.',',')}} <q-icon v-on:click="trocarPreco(produto)" name="edit" /></td>
-            <td class="tac">{{new Date(produto.dat_price).toLocaleDateString('pt-BR')}}</td>
+            <td><q-icon v-on:click="trocarAtivo(produto)" name="edit" /> {{produto.status}}</td>
+            <td><q-icon v-on:click="trocarDescricao(produto)" name="edit" /> {{produto.description}}</td>
+            <td class="tad">R$ {{produto.price}} <q-icon v-on:click="trocarPreco(produto)" name="edit" /></td>
+            <td class="tac">{{new Date(produto.priceDate).toLocaleDateString('pt-BR')}}</td>
           </tr>
           <tr>
-            <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.idf_active" size="2" /></td>
-            <td><q-input type="text" name="" v-model="novoProd.des_prod" size="50" /></td>
-            <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.val_price" size="10" /></td>
+            <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.status" size="2" /></td>
+            <td><q-input type="text" name="" v-model="novoProd.description" size="50" /></td>
+            <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.price" size="10" /></td>
             <td><a v-on:click="adicionarProd()">(adicionar)</a></td>
           </tr>
         </tbody>
@@ -42,9 +42,9 @@ export default {
     return {
       perfil: null,
       novoProd: {
-        idf_active: '1',
-        des_prod: '',
-        val_price: '1,00'
+        status: true,
+        description: '',
+        price: '1,00'
       },
       lista_produtos: []
     }
@@ -54,7 +54,7 @@ export default {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
       return this.$http.get('/products/').then(function (response) {
-        this.lista_produtos = response.data.rows
+        this.lista_produtos = response.data
         return undefined
       })
     }).catch(this.tratarErro)
@@ -74,17 +74,17 @@ export default {
           idf_active: {
             type: 'text',
             label: 'Ativo',
-            model: produto.idf_active
+            model: produto.status
           },
           des_prod: {
             type: 'text',
             label: 'Descrição',
-            model: produto.des_prod
+            model: produto.description
           },
           val_price: {
             type: 'text',
             label: 'Preço',
-            model: produto.val_price
+            model: produto.price
           }
         },
         buttons: [
@@ -92,10 +92,10 @@ export default {
           {
             label: 'Salvar',
             handler (data) {
-              data.cod_prod = produto.cod_prod
-              $this.$http.put('/prod/edit', data).then(function (response) {
-                for (let key of Object.keys(response.data.row)) {
-                  produto[key] = response.data.row[key]
+              data.id = produto.id
+              $this.$http.put('/products/' + produto.id, data).then(function (response) {
+                for (let key of Object.keys(response.data)) {
+                  produto[key] = response.data[key]
                 }
                 alert('Alterado!')
                 return undefined
@@ -106,10 +106,10 @@ export default {
       })
     },
     trocarAtivo (produto) {
-      let data = {cod_prod: produto.cod_prod, idf_active: produto.idf_active === '0' ? '1' : '0'}
-      this.$http.put('/prod/edit/ativo', data).then(function (response) {
-        for (let key of Object.keys(response.data.row)) {
-          produto[key] = response.data.row[key]
+      let data = {id: produto.id, status: !produto.status}
+      this.$http.patch('/products/' + produto.id + '/', data).then(function (response) {
+        for (let key of Object.keys(response.data)) {
+          produto[key] = response.data[key]
         }
         return undefined
       }).catch(this.tratarErro)
@@ -118,17 +118,17 @@ export default {
       const $this = this
       Dialog.create({
         title: 'Alterar Descrição',
-        message: produto.des_prod,
-        form: { des_prod: {type: 'text', label: 'Descrição', model: produto.des_prod} },
+        message: produto.description,
+        form: { description: {type: 'text', label: 'Descrição', model: produto.description} },
         buttons: [
           'Cancelar',
           {
             label: 'Salvar',
             handler (data) {
-              data.cod_prod = produto.cod_prod
-              $this.$http.put('/prod/edit/descricao', data).then(function (response) {
-                for (let key of Object.keys(response.data.row)) {
-                  produto[key] = response.data.row[key]
+              data.id = produto.id
+              $this.$http.patch('/products/' + produto.id + '/', data).then(function (response) {
+                for (let key of Object.keys(response.data)) {
+                  produto[key] = response.data[key]
                 }
                 return undefined
               }).catch($this.tratarErro)
@@ -141,17 +141,17 @@ export default {
       const $this = this
       Dialog.create({
         title: 'Alterar Preço',
-        message: produto.des_prod,
-        form: { val_price: {type: 'text', label: 'Preço', model: produto.val_price} },
+        message: produto.description,
+        form: { val_price: {type: 'text', label: 'Preço', model: produto.price} },
         buttons: [
           'Cancelar',
           {
             label: 'Salvar',
             handler (data) {
-              data.cod_prod = produto.cod_prod
-              $this.$http.put('/prod/edit/preco', data).then(function (response) {
+              data.id = produto.id
+              $this.$http.patch('/products/' + produto.id + '/', data).then(function (response) {
                 for (let key of Object.keys(response.data.row)) {
-                  produto[key] = response.data.row[key]
+                  produto[key] = response.data[key]
                 }
                 return undefined
               }).catch($this.tratarErro)
@@ -162,10 +162,10 @@ export default {
     },
 
     adicionarProd () {
-      this.$http.post('/prod', this.novoProd).then(function (response) {
-        this.novoProd.des_prod = ''
-        this.novoProd.val_price = '1,00'
-        this.lista_produtos.push(response.data.row)
+      this.$http.post('/products', this.novoProd).then(function (response) {
+        this.novoProd.description = ''
+        this.novoProd.price = '1,00'
+        this.lista_produtos.push(response.data)
         alert('Adicionado!')
         return undefined
       }).catch(this.tratarErro)
