@@ -55,8 +55,8 @@ export default {
     this.$http.get('/register').then(function (response) {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
-      return this.$http.post('/order/periodos/todos', {max_meses: 12}).then(function (response) {
-        this.listaMeses = response.data.rows
+      return this.$http.get('/order/period/').then(function (response) {
+        this.listaMeses = response.data
         if (this.listaMeses.length > 0) {
           this.mesSelecionado = this.listaMeses[0].value
         }
