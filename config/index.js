@@ -48,6 +48,8 @@ module.exports = {
   }
 }
 
+//Vue.http.headers.commum['Authorization'] = localStorage.getItem('access_token')
+
 /*
  * proxyTable example:
  *

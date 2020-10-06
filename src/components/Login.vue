@@ -38,9 +38,10 @@ export default {
         username: this.USER_LOGIN,
         password: this.USER_PASSW
       }
-      this.$http.post('/login', parametros).then(function () {
+      this.$http.post('/login', parametros).then(function (response) {
         this.USER_LOGIN = ''
         this.USER_PASSW = ''
+        localStorage.setItem('access_token', response.body.token)
         return window.location.replace(window.location.pathname + '#/carrinho')
         // window.location.replace(window.location.pathname)
         // window.location.reload()

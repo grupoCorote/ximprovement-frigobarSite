@@ -15,9 +15,9 @@
         <tbody>
           <tr v-for="produto in lista_produtos">
             <td>{{produto.des_prod}}</td>
-            <td class="tac">{{produto.num_qtd}}</td>
-            <td class="tad">R$ {{produto.total_cobrar.toFixed(2).replace('.',',')}}</td>
-            <td class="tad">R$ {{produto.total_abonar.toFixed(2).replace('.',',')}}</td>
+            <td class="tac">{{produto.total_quantity}}</td>
+            <td class="tad">R$ {{produto.total_cash_in.toFixed(2).replace('.',',')}}</td>
+            <td class="tad">R$ {{produto.total_accredit.toFixed(2).replace('.',',')}}</td>
           </tr>
           <tr>
             <td><b>Total:</b></td>
@@ -80,16 +80,16 @@ export default {
       let dat_fin = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
 
-      this.$http.post('/products/consumed/?itemsProduct__order__date__range=' + dat_ini + '2C' + dat_fin, {dat_ini, dat_fin}).then(function (response) {
+      this.$http.get('/products/consumed/', {itemsProduct__order__date__range: dat_ini, dat_fin}).then(function (response) {
         this.total_cobrar = 0
         this.total_abonar = 0
         this.qtd_total_consumida = 0
-        for (let produto of response.data.rows) {
-          this.total_cobrar += produto.total_cobrar
-          this.total_abonar += produto.total_abonar
-          this.qtd_total_consumida += produto.num_qtd
+        for (let produto of response.data) {
+          this.total_cobrar += produto.total_cash_in
+          this.total_abonar += produto.total_accredit
+          this.qtd_total_consumida += produto.total_quantity
         }
-        this.lista_produtos = response.data.rows
+        this.lista_produtos = response.data
         return undefined
       }).catch(this.tratarErro)
     }

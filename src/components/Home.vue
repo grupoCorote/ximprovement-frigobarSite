@@ -22,10 +22,10 @@
                   </thead>
                   <tbody>
                     <tr v-for="pedido in lista_pedidos">
-                      <td> <a v-on:click="detalharPedido(pedido)">{{pedido.dat_order}}</a></td>
-                      <td class="tad">R$ {{pedido.valor_total.toFixed(2).replace('.', ',')}}</td>
-                      <td v-html="pedido.des_use">&nbsp;</td>
-                      <td>{{pedido.des_justify}}</td>
+                      <td> <a v-on:click="detalharPedido(pedido)">{{pedido.date}}</a></td>
+                      <td class="tad">R$ {{pedido.total.toFixed(2).replace('.', ',')}}</td>
+                      <td v-html="pedido.orderType">&nbsp;</td>
+                      <td>{{pedido.justification}}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -40,9 +40,9 @@
             <td style="width: 50%;">
               <div v-if="pedidoSelecionado">
                 <h5>Detalhes do pedido:</h5>
-                Data: {{pedidoSelecionado.dat_order}}<br>
-                Tipo: <span v-html="pedidoSelecionado.des_use"></span><br>
-                <span v-if="pedidoSelecionado.des_justify">Justificativa: {{pedidoSelecionado.des_justify}}<br></span>
+                Data: {{pedidoSelecionado.dater}}<br>
+                Tipo: <span v-html="pedidoSelecionado.orderType"></span><br>
+                <span v-if="pedidoSelecionado.justification">Justificativa: {{pedidoSelecionado.justification}}<br></span>
                 <br>
                 <table class="q-table cell-separator">
                   <thead>
@@ -54,14 +54,14 @@
                   </thead>
                   <tbody>
                     <tr v-for="item in pedidoSelecionado.itens">
-                      <td>{{item.des_prod}}</td>
-                      <td class="tac">{{item.num_qtd}}</td>
-                      <td class="tad">R$ {{(item.num_qtd * item.val_price).toFixed(2).replace('.', ',')}}</td>
+                      <td>{{item.description}}</td>
+                      <td class="tac">{{item.quantity}}</td>
+                      <td class="tad">R$ {{(item.quantity * item.price).toFixed(2).replace('.', ',')}}</td>
                     </tr>
                   </tbody>
                 </table>
                 <br>
-                Total: R$ {{pedidoSelecionado.valor_total.toFixed(2).replace('.', ',')}}
+                Total: R$ {{pedidoSelecionado.total.toFixed(2).replace('.', ',')}}
               </div>
               <div v-else>
               </div>
@@ -99,8 +99,8 @@ export default {
       this.perfil = response.data.perfil
 
       this.pedidoSelecionado = null
-      return this.$http.post('/order/periodos/meus', {max_meses: 12}).then(function (response) {
-        this.listaMeses = response.data.rows
+      return this.$http.get('/order/period/').then(function (response) {
+        this.listaMeses = response.data
         if (this.listaMeses.length > 0) {
           this.mesSelecionado = this.listaMeses[0].value
         }
@@ -126,15 +126,15 @@ export default {
       this.totalPedidosAbonar = 0
       let dat_fin = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
-      this.$http.post('/order/meus', {dat_ini: new Date(this.mesSelecionado), dat_fin}).then(function (response) {
-        for (let pedido of response.data.rows) {
-          pedido.dat_order = new Date(pedido.dat_order)
-          pedido.dat_order = pedido.dat_order.toLocaleString('pt-BR')
-          if (pedido.idf_charge === '1') this.totalPedidosCobrar += pedido.valor_total
-          else if (pedido.cod_use !== 3) this.totalPedidosAbonar += pedido.valor_total
-          if (pedido.cod_use === 3) pedido.des_use = `<span style='color: red;'><b>${pedido.des_use}</b></span>`
+      this.$http.get('/order/all/', {dat_ini: new Date(this.mesSelecionado), dat_fin}).then(function (response) {
+        for (let pedido of response.data) {
+          pedido.date = new Date(pedido.date)
+          pedido.date = pedido.date.toLocaleString('pt-BR')
+          if (pedido.orderType === 1) this.totalPedidosCobrar += pedido.total
+          else if (pedido.orderType !== 3) this.totalPedidosAbonar += pedido.total
+          if (pedido.orderType === 3) pedido.orderType = `<span style='color: red;'><b>${pedido.orderType}</b></span>`
         }
-        this.lista_pedidos = response.data.rows
+        this.lista_pedidos = response.data
         return undefined
       }).catch(this.tratarErro)
     },
@@ -143,8 +143,8 @@ export default {
       let inst = this
       if (pedido.itens == null) pedido.itens = []
       this.pedidoSelecionado = pedido
-      this.$http.get('/oritem/dopedido/' + pedido.cod_order).then(function (response) {
-        pedido.itens = response.data.rows
+      this.$http.get('/items/byOrder/' + pedido.id + '/').then(function (response) {
+        pedido.itens = response.data
         inst.$forceUpdate()
         return undefined
       }).catch(this.tratarErro)

@@ -19,6 +19,11 @@ ws.interceptor = function (request, next) {
     return next(request.respondWith({ perfil: ws.perfil }, { status: 200, statusText: 'OK' }))
   }
 
+  // const token = localStorage.getItem('access_token')
+  // if (token) {
+  // request.headers.set('Authorization', token)
+  // }
+
   // Verifica se a rota está solicitando as informações do usuário logado
   let aguardandoPerfil = (request.url === '/register' && request.method === 'GET')
 

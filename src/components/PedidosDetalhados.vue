@@ -19,13 +19,13 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="pedido in lista_pedidos" :key="pedido.cod_order">
+                      <tr v-for="pedido in lista_pedidos" :key="pedido.id">
                         <td class="tac"><b><a v-on:click="excluirPedido(pedido)"><q-icon style="color: red;" name="clear" /></a></b></td>
-                        <td> <a v-on:click="detalharPedido(pedido)">{{pedido.dat_order.toLocaleDateString('pt-BR')}}</a></td>
-                        <td>{{pedido.des_name}}</td>
-                        <td class="tad">R$ {{pedido.valor_total.toFixed(2).replace('.', ',')}}</td>
-                        <td v-html="pedido.des_use">&nbsp;</td>
-                        <td>{{pedido.des_justify}}</td>
+                        <td> <a v-on:click="detalharPedido(pedido)">{{pedido.date.toLocaleDateString('pt-BR')}}</a></td>
+                        <td>{{pedido.name}}</td>
+                        <td class="tad">R$ {{pedido.total.toFixed(2).replace('.', ',')}}</td>
+                        <td v-html="pedido.orderType">&nbsp;</td>
+                        <td>{{pedido.justification}}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -40,8 +40,8 @@
               <div v-if="pedidoSelecionado">
                 <h5>Detalhes do pedido:</h5>
                 Data: {{pedidoSelecionado.dat_order.toLocaleString('pt-BR')}}<br>
-                Tipo: <span v-html="pedidoSelecionado.des_use"></span><br>
-                <span v-if="pedidoSelecionado.des_justify">Justificativa: {{pedidoSelecionado.des_justify}}<br></span>
+                Tipo: <span v-html="pedidoSelecionado.orderType"></span><br>
+                <span v-if="pedidoSelecionado.justification">Justificativa: {{pedidoSelecionado.justification}}<br></span>
                 <br>
                 <table class="q-table cell-separator">
                   <thead>
@@ -53,14 +53,14 @@
                   </thead>
                   <tbody>
                     <tr v-for="item in pedidoSelecionado.itens">
-                      <td>{{item.des_prod}}</td>
-                      <td class="tac">{{item.num_qtd}}</td>
-                      <td class="tad">R$ {{(item.num_qtd * item.val_price).toFixed(2).replace('.', ',')}}</td>
+                      <td>{{item.description}}</td>
+                      <td class="tac">{{item.quantity}}</td>
+                      <td class="tad">R$ {{(item.quantity * item.price).toFixed(2).replace('.', ',')}}</td>
                     </tr>
                   </tbody>
                 </table>
                 <br>
-                Total: R$ {{pedidoSelecionado.valor_total.toFixed(2).replace('.', ',')}}
+                Total: R$ {{pedidoSelecionado.total.toFixed(2).replace('.', ',')}}
               </div>
 
             </td>
@@ -97,8 +97,8 @@ export default {
     this.$http.get('/register').then(function (response) {
       // this.i18n = i18ns(this.$route.name)
       this.perfil = response.data.perfil
-      return this.$http.post('/order/periodos/todos', {max_meses: 12}).then(function (response) {
-        this.listaMeses = response.data.rows
+      return this.$http.get('/order/period/', {max_meses: 12}).then(function (response) {
+        this.listaMeses = response.data
         if (this.listaMeses.length > 0) {
           this.mesSelecionado = this.listaMeses[0].value
         }
@@ -115,15 +115,15 @@ export default {
     ordenar (campo) {
       if (campo === 'data') {
         this.lista_pedidos.sort((a, b) => {
-          if (a.dat_order > b.dat_order) return 1
-          if (a.dat_order < b.dat_order) return -1
+          if (a.date > b.date) return 1
+          if (a.date < b.date) return -1
           return 0
         })
       }
       if (campo === 'usuario') {
         this.lista_pedidos.sort((a, b) => {
-          if (a.des_name > b.des_name) return 1
-          if (a.des_name < b.des_name) return -1
+          if (a.name > b.name) return 1
+          if (a.name < b.name) return -1
           return 0
         })
       }
@@ -135,12 +135,12 @@ export default {
       let dat_fin = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
 
-      this.$http.post('/order/todos', {dat_ini, dat_fin}).then(function (response) {
-        for (let pedido of response.data.rows) {
-          pedido.dat_order = new Date(pedido.dat_order)
-          if (pedido.cod_use === 3) pedido.des_use = `<span style='color: red;'><b>${pedido.des_use}</b></span>`
+      this.$http.get('/order/all/', {dat_ini, dat_fin}).then(function (response) {
+        for (let pedido of response.data) {
+          pedido.date = new Date(pedido.date)
+          if (pedido.orderType === 3) pedido.justification = `<span style='color: red;'><b>${pedido.justification}</b></span>`
         }
-        this.lista_pedidos = response.data.rows
+        this.lista_pedidos = response.data
         return undefined
       }).catch(this.tratarErro)
     },
@@ -148,8 +148,8 @@ export default {
       if (pedido.itens == null) pedido.itens = []
       this.usuarioSelecionado = null
       this.pedidoSelecionado = pedido
-      this.$http.get('/items/byOrder/' + pedido.cod_order).then(function (response) {
-        pedido.itens = response.data.rows
+      this.$http.get('/items/byOrder/' + pedido.id + '/').then(function (response) {
+        pedido.itens = response.data
         this.$forceUpdate()
         return undefined
       }).catch(this.tratarErro)
@@ -159,12 +159,12 @@ export default {
       const $this = this
       Dialog.create({
         title: 'Excluir pedido',
-        message: `<b>Data:</b> ${pedido.dat_order.toLocaleString('pt-BR')}<br>` +
-          `<b>Usuário:</b> ${pedido.des_name}<br>` +
-          `<b>Total:</b> R$ ${pedido.valor_total.toFixed(2).replace('.', ',')}<br>` +
-          `<b>Tipo:</b> ${pedido.des_use}<br>` +
-          `<b>Justificativa:</b> ${pedido.des_justify}`,
-        form: { des_justify: {type: 'text', label: 'Justificativa', model: ''} },
+        message: `<b>Data:</b> ${pedido.date.toLocaleString('pt-BR')}<br>` +
+          `<b>Usuário:</b> ${pedido.name}<br>` +
+          `<b>Total:</b> R$ ${pedido.total.toFixed(2).replace('.', ',')}<br>` +
+          `<b>Tipo:</b> ${pedido.orderType}<br>` +
+          `<b>Justificativa:</b> ${pedido.justification}`,
+        form: { justification: {type: 'text', label: 'Justificativa', model: ''} },
         buttons: [
           'Cancelar',
           {
@@ -177,12 +177,12 @@ export default {
               }
               else {
                 data.cod_order = pedido.cod_order
-                $this.$http.put('/order/excluir', data).then(function (response) {
-                  for (let key of Object.keys(response.data.row)) {
-                    if (key.startsWith('dat_')) pedido[key] = new Date(response.data.row[key])
-                    else pedido[key] = response.data.row[key]
+                $this.$http.patch('/order/' + data + '/').then(function (response) {
+                  for (let key of Object.keys(response.data)) {
+                    if (key.startsWith('dat_')) pedido[key] = new Date(response.data[key])
+                    else pedido[key] = response.data[key]
                   }
-                  if (pedido.cod_use === 3) pedido.des_use = `<span style='color: red;'><b>${pedido.des_use}</b></span>`
+                  if (pedido.orderType === 3) pedido.orderType = `<span style='color: red;'><b>${pedido.orderType}</b></span>`
                   close()
                   return undefined
                 }).catch($this.tratarErro)
@@ -208,16 +208,16 @@ export default {
       this.pedidoSelecionado = null
       this.usuarioSelecionado = usuario
 
-      this.$http.post('/items/ByUser/' + usuario.cod_uid, {dat_ini, dat_fin}).then(function (response) {
+      this.$http.post('/items/ByUser/' + usuario.id + '/', {dat_ini, dat_fin}).then(function (response) {
         usuario.total_cobrar = 0
         usuario.total_abonar = 0
-        for (let item of response.data.rows) {
-          usuario.total_cobrar += item.num_qtd_cobrar * item.val_price
-          usuario.total_abonar += item.num_qtd_abonar * item.val_price
-          item.dat_order = new Date(item.dat_order)
-          if (item.num_qtd_abonar !== 0) usuario.exibeAbonar = true
+        for (let item of response.data) {
+          usuario.total_cobrar += item.quantity_cash_in * item.price
+          usuario.total_abonar += item.quantity_accredit * item.price
+          item.date = new Date(item.date)
+          if (item.quantity_accredit !== 0) usuario.exibeAbonar = true
         }
-        usuario.itens = response.data.rows
+        usuario.itens = response.data
         this.$forceUpdate()
         return undefined
       }).catch(this.tratarErro)
