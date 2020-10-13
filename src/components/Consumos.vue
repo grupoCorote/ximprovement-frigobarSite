@@ -76,11 +76,11 @@ export default {
       this.total_cobrar = 0
       this.total_abonar = 0
       this.qtd_total_consumida = 0
-      let dat_ini = new Date(this.mesSelecionado)
-      let dat_fin = new Date(this.mesSelecionado)
-      dat_fin.setMonth(dat_fin.getMonth() + 1)
+      // let dat_ini = new Date(this.mesSelecionado)
+      // let dat_fin = new Date(this.mesSelecionado)
+      // dat_fin.setMonth(dat_fin.getMonth() + 1)
 
-      this.$http.get('/products/consumed/', {itemsProduct__order__date__range: dat_ini, dat_fin}).then(function (response) {
+      this.$http.get('/products/consumed/', {params: {itemsProduct__order__date__range: '2016-01-02 00:00+0000,2021-01-02 00:00+0000'}}).then(function (response) {
         this.total_cobrar = 0
         this.total_abonar = 0
         this.qtd_total_consumida = 0

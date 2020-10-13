@@ -26,7 +26,16 @@ export default {
     }
   },
   mounted () {
-    this.$http.get('/register').then(() => window.location.replace(window.location.pathname + '#/carrinho')).catch(() => {})
+    // this.$http.get('/register').then(() => window.location.replace(window.location.pathname + '#/carrinho')).catch(() => {})
+    this.$http.get('/register').then(function (response) {
+      // this.i18n = i18ns(this.$route.name)
+      this.perfil = response.data.perfil
+
+      if (this.perfil != null) {
+        return window.location.replace(window.location.pathname + '#/carrinho')
+      }
+      return {}
+    }).catch(this.tratarErro)
   },
   methods: {
     tratarErro (response) {
@@ -41,6 +50,7 @@ export default {
       this.$http.post('/login', parametros).then(function (response) {
         this.USER_LOGIN = ''
         this.USER_PASSW = ''
+        localStorage.setItem('login_realizado', true)
         localStorage.setItem('access_token', response.body.token)
         return window.location.replace(window.location.pathname + '#/carrinho')
         // window.location.replace(window.location.pathname)

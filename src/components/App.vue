@@ -130,7 +130,8 @@ export default {
       }
     },
     logout () {
-      this.$http.get('/login/logout').then(() => {
+      this.$http.post('/logout').then(() => {
+        localStorage.setItem('login_realizado', false)
         window.location.reload()
         return undefined
       }).catch(() => {
