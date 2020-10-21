@@ -52,6 +52,7 @@ export default {
         this.USER_PASSW = ''
         localStorage.setItem('login_realizado', true)
         localStorage.setItem('access_token', response.body.token)
+        localStorage.setItem('user', response.body.id)
         return window.location.replace(window.location.pathname + '#/carrinho')
         // window.location.replace(window.location.pathname)
         // window.location.reload()

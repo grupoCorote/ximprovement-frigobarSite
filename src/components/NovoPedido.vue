@@ -142,20 +142,21 @@ export default {
     },
 
     confirmarPedido () {
-      let lista_itens = []
+      let items = []
       if (this.recalcularValor()) {
         return
       }
       for (let item of this.lista_carrinho) {
-        if (item.quantity) lista_itens.push({product: item.product, quantity: item.quantity, price: item.price})
+        if (item.quantity) items.push({product: item.product, quantity: item.quantity, price: item.price})
       }
-      if (lista_itens.length === 0) {
+      if (items.length === 0) {
         alert('Nenhum item no pedido')
       }
       else if (this.ckbterceiros && (!this.justificativa)) {
         alert('É necessário preencher uma justificativa quando o pedido é para visitantes')
       }
       else {
+        let dateNow = new Date()
         Dialog.create({
           title: 'Confirmar pedido',
           message: 'Deseja registrar o pedido?',
@@ -169,10 +170,11 @@ export default {
                 let params = {
                   orderType: this.ckbterceiros ? 2 : 1,
                   justification: this.ckbterceiros ? this.justificativa : '',
-                  user: 10,
-                  lista_itens
+                  user: this.perfil.user,
+                  date: dateNow.toISOString().slice(0, 10) + ' 00:00',
+                  items
                 }
-                this.$http.post('/order', params).then(function (response) {
+                this.$http.post('/order/', params).then(function (response) {
                   alert('Adicionado!')
                   this.limparCarrinho()
                   // recalcularValor()

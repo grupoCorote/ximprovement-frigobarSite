@@ -39,7 +39,7 @@
 
               <div v-if="pedidoSelecionado">
                 <h5>Detalhes do pedido:</h5>
-                Data: {{pedidoSelecionado.dat_order.toLocaleString('pt-BR')}}<br>
+                Data: {{pedidoSelecionado.date.toLocaleDateString('pt-BR')}}<br>
                 Tipo: <span v-html="pedidoSelecionado.orderType"></span><br>
                 <span v-if="pedidoSelecionado.justification">Justificativa: {{pedidoSelecionado.justification}}<br></span>
                 <br>
@@ -134,8 +134,10 @@ export default {
       let dat_ini = new Date(this.mesSelecionado)
       let dat_fin = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
+      let ini = dat_ini.toISOString().slice(0, 10) + ' 00:00'
+      let fin = dat_fin.toISOString().slice(0, 10) + ' 00:00'
 
-      this.$http.get('/order/all/', {dat_ini, dat_fin}).then(function (response) {
+      this.$http.get('/order/all/', {params: {date__lte: fin, date__gte: ini}}).then(function (response) {
         for (let pedido of response.data) {
           pedido.date = new Date(pedido.date)
           if (pedido.orderType === 3) pedido.justification = `<span style='color: red;'><b>${pedido.justification}</b></span>`
@@ -172,17 +174,22 @@ export default {
             classes: 'negative',
             preventClose: true,
             handler (data, close) {
-              if (!data.des_justify) {
+              if (!data.justification) {
                 alert('É necessário justificar a exclusão')
               }
               else {
-                data.cod_order = pedido.cod_order
-                $this.$http.patch('/order/' + data + '/').then(function (response) {
+                data.id = pedido.id
+                data.orderType = 3
+                $this.$http.patch('/order/' + data.id + '/', data).then(function (response) {
                   for (let key of Object.keys(response.data)) {
-                    if (key.startsWith('dat_')) pedido[key] = new Date(response.data[key])
-                    else pedido[key] = response.data[key]
+                    if (key.startsWith('date')) {
+                      pedido[key] = new Date(response.data[key])
+                    }
+                    else {
+                      pedido[key] = response.data[key]
+                    }
                   }
-                  if (pedido.orderType === 3) pedido.orderType = `<span style='color: red;'><b>${pedido.orderType}</b></span>`
+                  if (pedido.orderType === 3) pedido.orderType = `<span style='color: red;'><b>Excluído</b></span>`
                   close()
                   return undefined
                 }).catch($this.tratarErro)

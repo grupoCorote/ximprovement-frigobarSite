@@ -114,7 +114,10 @@ export default {
   },
   methods: {
     tratarErro (response) {
-      if (response.status === 401) return window.location.replace('#/login')
+      if (response.status === 401) {
+        localStorage.setItem('login_realizado', false)
+        return window.location.replace('#/login')
+      }
       if (!response.status) return alert('Erro de comunicação com o servidor')
       alert(response.message || response.data.message || ('Erro ' + response.status))
     },
@@ -125,8 +128,11 @@ export default {
       this.totalPedidosCobrar = 0
       this.totalPedidosAbonar = 0
       let dat_fin = new Date(this.mesSelecionado)
+      let dat_ini = new Date(this.mesSelecionado)
       dat_fin.setMonth(dat_fin.getMonth() + 1)
-      this.$http.get('/order/all/', {dat_ini: new Date(this.mesSelecionado), dat_fin}).then(function (response) {
+      let ini = dat_ini.toISOString().slice(0, 10) + ' 00:00'
+      let fin = dat_fin.toISOString().slice(0, 10) + ' 00:00'
+      this.$http.get('/order/all/', {params: {date__lte: fin, date__gte: ini}}).then(function (response) {
         for (let pedido of response.data) {
           pedido.date = new Date(pedido.date)
           pedido.date = pedido.date.toLocaleString('pt-BR')
