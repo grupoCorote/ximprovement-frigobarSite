@@ -8,6 +8,8 @@
             <th>Produto</th>
             <th>Preço</th>
             <th>Data preço</th>
+            <th>Cod. Barras</th>
+            <th>Fotos</th>
           </tr>
         </thead>
         <tbody>
@@ -16,11 +18,14 @@
             <td><q-icon v-on:click="trocarDescricao(produto)" name="edit" /> {{produto.description}}</td>
             <td class="tad">R$ {{produto.price}} <q-icon v-on:click="trocarPreco(produto)" name="edit" /></td>
             <td class="tac">{{new Date(produto.priceDate).toLocaleDateString('pt-BR')}}</td>
+            <td><q-icon v-on:click="trocarBarCode(produto)" name="edit" /> {{produto.barCode}}</td>
+            <td><q-icon v-on:click="uploadPhoto(produto)" name="cloud_upload" /></td>
           </tr>
           <tr>
             <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.status" size="2" /></td>
             <td><q-input type="text" name="" v-model="novoProd.description" size="50" /></td>
             <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.price" size="10" /></td>
+            <td><q-input type="text" name="" v-model="novoProd.barCode" size="13" /></td>
             <td><a v-on:click="adicionarProd()">(adicionar)</a></td>
           </tr>
         </tbody>
@@ -137,12 +142,12 @@ export default {
         ]
       })
     },
-    trocarPreco (produto) {
+    trocarBarCode (produto) {
       const $this = this
       Dialog.create({
-        title: 'Alterar Preço',
+        title: 'Alterar Código de Barras',
         message: produto.description,
-        form: { val_price: {type: 'text', label: 'Preço', model: produto.price} },
+        form: { barCode: {type: 'text', label: 'Cód. Barras', model: produto.barCode} },
         buttons: [
           'Cancelar',
           {
@@ -150,7 +155,30 @@ export default {
             handler (data) {
               data.id = produto.id
               $this.$http.patch('/products/' + produto.id + '/', data).then(function (response) {
-                for (let key of Object.keys(response.data.row)) {
+                for (let key of Object.keys(response.data)) {
+                  produto[key] = response.data[key]
+                }
+                return undefined
+              }).catch($this.tratarErro)
+            }
+          }
+        ]
+      })
+    },
+    trocarPreco (produto) {
+      const $this = this
+      Dialog.create({
+        title: 'Alterar Preço',
+        message: produto.description,
+        form: { price: {type: 'text', label: 'Preço', model: produto.price} },
+        buttons: [
+          'Cancelar',
+          {
+            label: 'Salvar',
+            handler (data) {
+              data.id = produto.id
+              $this.$http.patch('/products/' + produto.id + '/', data).then(function (response) {
+                for (let key of Object.keys(response.data)) {
                   produto[key] = response.data[key]
                 }
                 return undefined
@@ -165,6 +193,7 @@ export default {
       this.$http.post('/products', this.novoProd).then(function (response) {
         this.novoProd.description = ''
         this.novoProd.price = '1,00'
+        this.novoProd.barCode = '0'
         this.lista_produtos.push(response.data)
         alert('Adicionado!')
         return undefined
