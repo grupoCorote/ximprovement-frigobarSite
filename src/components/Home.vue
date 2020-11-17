@@ -23,15 +23,15 @@
                   <tbody>
                     <tr v-for="pedido in lista_pedidos">
                       <td> <a v-on:click="detalharPedido(pedido)">{{pedido.date}}</a></td>
-                      <td class="tad">R$ {{pedido.total.toFixed(2).replace('.', ',')}}</td>
+                      <td class="tad">R$ {{pedido.total}}</td>
                       <td v-html="pedido.orderType">&nbsp;</td>
                       <td>{{pedido.justification}}</td>
                     </tr>
                   </tbody>
                 </table>
                 <br>
-                <p>Total a ser debitado no período: <b>R$ {{totalPedidosCobrar.toFixed(2).replace('.', ',')}}</b></p>
-                <p>Total abonado no período: R$ {{totalPedidosAbonar.toFixed(2).replace('.', ',')}}</p>
+                <p>Total a ser debitado no período: <b>R$ {{totalPedidosCobrar}}</b></p>
+                <p>Total abonado no período: R$ {{totalPedidosAbonar}}</p>
               </div>
               <div v-else>
                 (nenhum)
@@ -136,8 +136,8 @@ export default {
         for (let pedido of response.data) {
           pedido.date = new Date(pedido.date)
           pedido.date = pedido.date.toLocaleString('pt-BR')
-          if (pedido.orderType === 1) this.totalPedidosCobrar += pedido.total
-          else if (pedido.orderType !== 3) this.totalPedidosAbonar += pedido.total
+          if (pedido.orderType === 1) this.totalPedidosCobrar += pedido.total_cash_in
+          else if (pedido.orderType !== 3) this.totalPedidosAbonar += pedido.total_accredit
           if (pedido.orderType === 3) pedido.orderType = `<span style='color: red;'><b>${pedido.orderType}</b></span>`
         }
         this.lista_pedidos = response.data
@@ -149,8 +149,12 @@ export default {
       let inst = this
       if (pedido.itens == null) pedido.itens = []
       this.pedidoSelecionado = pedido
+      this.pedidoSelecionado.total = 0
       this.$http.get('/items/byOrder/' + pedido.id + '/').then(function (response) {
         pedido.itens = response.data
+        for (let item of response.data) {
+          this.pedidoSelecionado.total += item.quantity * item.price
+        }
         inst.$forceUpdate()
         return undefined
       }).catch(this.tratarErro)
