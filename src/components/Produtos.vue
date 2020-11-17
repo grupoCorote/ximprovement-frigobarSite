@@ -19,7 +19,7 @@
             <td class="tad">R$ {{produto.price}} <q-icon v-on:click="trocarPreco(produto)" name="edit" /></td>
             <td class="tac">{{new Date(produto.priceDate).toLocaleDateString('pt-BR')}}</td>
             <td><q-icon v-on:click="trocarBarCode(produto)" name="edit" /> {{produto.barCode}}</td>
-            <td><q-icon v-on:click="uploadPhoto(produto)" name="cloud_upload" /></td>
+            <td><q-input @change="handleImage" type="file" accept="image/*" /></td>
           </tr>
           <tr>
             <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.status" size="2" /></td>
@@ -198,6 +198,20 @@ export default {
         alert('Adicionado!')
         return undefined
       }).catch(this.tratarErro)
+    },
+
+    handleImage (e) {
+      const selectedImage = e
+      this.createBase64Image(selectedImage)
+    },
+
+    createBase64Image (fileObject) {
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        this.image = e.target.result
+      }
+      reader.readAsBinaryString(fileObject)
     }
   }
 }
