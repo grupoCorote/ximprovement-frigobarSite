@@ -19,8 +19,8 @@
             <td class="tad">R$ {{produto.price}} <q-icon v-on:click="trocarPreco(produto)" name="edit" /></td>
             <td class="tac">{{new Date(produto.priceDate).toLocaleDateString('pt-BR')}}</td>
             <td><q-icon v-on:click="trocarBarCode(produto)" name="edit" /> {{produto.barCode}}</td>
-            <td><q-input @change="handleImage" type="file" accept="image/*" /></td>
-          </tr>
+            <td><input @change="handleImage($event, produto)" type="file" accept="image/*" /></td>
+          </tr>00
           <tr>
             <td><q-input style="text-align: center;" type="text" name="" v-model="novoProd.status" size="2" /></td>
             <td><q-input type="text" name="" v-model="novoProd.description" size="50" /></td>
@@ -190,7 +190,7 @@ export default {
     },
 
     adicionarProd () {
-      this.$http.post('/products', this.novoProd).then(function (response) {
+      this.$http.post('/products/', this.novoProd).then(function (response) {
         this.novoProd.description = ''
         this.novoProd.price = '1,00'
         this.novoProd.barCode = '0'
@@ -200,18 +200,22 @@ export default {
       }).catch(this.tratarErro)
     },
 
-    handleImage (e) {
-      const selectedImage = e
-      this.createBase64Image(selectedImage)
-    },
-
-    createBase64Image (fileObject) {
+    handleImage (e, produto) {
+      const selectedImage = e.target.files[0]
       const reader = new FileReader()
 
       reader.onload = (e) => {
-        this.image = e.target.result
+        let params = {
+          product: produto.id,
+          photo: e.target.result,
+          photoType: 1
+        }
+        this.$http.post('/photo/', params).then(function (response) {
+          alert('Foto adicionada!')
+          return undefined
+        }).catch(this.tratarErro)
       }
-      reader.readAsBinaryString(fileObject)
+      reader.readAsDataURL(selectedImage)
     }
   }
 }
