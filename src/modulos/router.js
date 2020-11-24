@@ -64,6 +64,12 @@ const router = new VueRouter({
       name: 'Produtos',
       meta: { menuTitle: 'Lista de Produtos', pageTitle: 'Lista de Produtos', icon: 'menu', needAdmin: true }
     },
+    {
+      component: load('Fotos'),
+      path: '/fotos',
+      name: 'Fotos',
+      meta: { menuTitle: 'Fotos dos Produtos', pageTitle: 'Fotos dos Produtos', icon: 'collections', needAdmin: true }
+    },
 
     // Always leave this last one
     {
