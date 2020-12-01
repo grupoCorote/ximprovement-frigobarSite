@@ -1,4 +1,4 @@
-<template lang="html">
+<template>
   <div style="margin:20px; padding: 0px;" v-if="perfil">
 
         <table style="width: 100%;">
@@ -10,25 +10,69 @@
                 <br>
               </div>
               <br>
-              <div v-if="listaFotos.length > 0">
-                (nenhum)
-              </div>
-              <div v-else>
-                (nenhum)
-              </div>
             </td>
           </tbody>
         </table>
-
+        <div v-if="listaFotos.length > 0">
+        <q-card inline v-for="foto in this.listaFotos" v-bind:key="foto.id">
+          <q-card-media>
+            <img :src=foto.url>
+          </q-card-media>
+          <q-card-actions align="around">
+            <q-btn flat round small color="green" v-on:click="aprovarFoto(foto.id)"><q-icon name="done" /></q-btn>
+            <q-btn flat round small color="primary" v-on:click="mostrarFoto(foto.url)"><q-icon name="image" /></q-btn>
+            <q-btn flat round small v-on:click="deletarFoto(foto.id)"><q-icon name="delete" /></q-btn>
+          </q-card-actions>
+        </q-card>
+        </div>
   </div>
+ 
 </template>
 
 <script>
 'use strict'
+import {
+  QCard,
+  QCardTitle,
+  QCardMedia,
+  QCardActions,
+  QCardSeparator,
+  QCardMain,
+  QList,
+  QItem,
+  QItemMain,
+  QItemSide,
+  QItemTile,
+  QCollapsible,
+  QRating,
+  QBtn,
+  QParallax,
+  QIcon,
+  QPopover,
+  QVideo
+} from 'quasar'
 
 export default {
   components: {
-    QSelect: require('quasar-framework').QSelect
+    QSelect: require('quasar-framework').QSelect,
+    QCard,
+    QCardTitle,
+    QCardMedia,
+    QCardActions,
+    QCardSeparator,
+    QCardMain,
+    QList,
+    QItem,
+    QItemMain,
+    QItemSide,
+    QItemTile,
+    QCollapsible,
+    QRating,
+    QBtn,
+    QParallax,
+    QIcon,
+    QPopover,
+    QVideo
   },
   data () {
     return {
@@ -66,20 +110,46 @@ export default {
 
     atualizarGaleria () {
       this.listaFotos = []
+      let aux = null
       this.$http.get('/photo/', {params: {product: this.produtoSelecionado}}).then(function (response) {
         for (let foto of response.data) {
-          this.$http.get('/photo/' + foto.id + '/download/').then(function (response2) {
-            let reader = new FileReader()
-            reader.readAsArrayBuffer(response2.data)
-            reader.onload = () => {
-              this.listaFotos.push(reader.result)
-            }
-            return undefined
-          }).catch(this.tratarErro)
+          aux = {id: foto.id, url: 'http://127.0.0.1:8000/photo/' + foto.id + '/download/', photoType: foto.photoType}
+          this.listaFotos.push(aux)
         }
         return undefined
       }).catch(this.tratarErro)
+    },
+
+    definirCor (photoType) {
+      if (photoType === 'data') {
+        return 'green'
+      }
+      else {
+        return 'grey'
+      }
+    },
+
+    deletarFoto (photoId) {
+      this.$http.delete('/photo/' + photoId + '/').then(function (response) {
+        this.atualizarGaleria()
+        return undefined
+      }).catch(this.tratarErro)
+    },
+
+    aprovarFoto (photoId) {
+      let data = {photoType: 1}
+      this.$http.patch('/photo/' + photoId + '/', data).then(function (response) {
+        this.atualizarGaleria()
+        return undefined
+      }).catch(this.tratarErro)
     }
+
+    // mostrarFoto (photoUrl) {
+    //   w2popup.open({
+    //     title: 'Image',
+    //     body: '<div class="w2ui-centered"><img src="' + photoUrl + '"></img></div>'
+    //   })
+    // }
   }
 }
 </script>
@@ -90,5 +160,8 @@ export default {
   }
   .tac {
     text-align: center;
+  }
+  .q-card{
+    width: 300px;
   }
 </style>

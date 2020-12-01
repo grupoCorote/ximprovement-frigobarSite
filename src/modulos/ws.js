@@ -12,7 +12,7 @@ const ws = {
 ws.interceptor = function (request, next) {
   // Tem que passar "credentials = true" para poder enviar o cookie de sessão
   request.credentials = true
-  if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH') request.headers.set('Content-Type', 'application/json')
+  if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH' || request.method === 'DELETE') request.headers.set('Content-Type', 'application/json')
 
   // Intercepta a rota de solicitação de perfil se já tem informações do perfil e retorna direto sem precisar pedir do servidor
   if (request.url === '/register' && request.method === 'GET' && ws.perfil) {
